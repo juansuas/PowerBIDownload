@@ -16,8 +16,10 @@
                 throw new Error("No se encontró el parámetro 'data' en la URL.");
             }
 
-            // Decodificar y parsear el JSON recibido
+            // Decodificar el JSON codificado en la URL
             const decodedData = decodeURIComponent(jsonData);
+            
+            // Parsear el JSON a un objeto
             const parsedData = JSON.parse(decodedData);
 
             // Validar que el JSON contiene "header" y "data"
@@ -40,7 +42,7 @@
             document.body.removeChild(link);
         } catch (error) {
             console.error("Error al procesar el JSON:", error);
-            alert("Hubo un error al procesar los datos. Por favor, verifica el formato del JSON.");
+            alert("Hubo un error al procesar los datos. Por favor, verifica la URL.");
         }
     </script>
     <p>Generando archivo... Si la descarga no inicia automáticamente, revisa la configuración del navegador.</p>
