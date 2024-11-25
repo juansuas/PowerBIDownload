@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generar Archivo CSV</title>
+    <title>Generar Archivo Excel</title>
+    <!-- Agregar la biblioteca SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
     <script>
@@ -14,11 +16,21 @@
         // Decodificar el contenido
         const decodedData = decodeURIComponent(data);
 
-        // Crear el archivo y descargarlo
-        const blob = new Blob([decodedData], { type: "text/csv" });
+        // Procesar los datos y convertirlos en un array para Excel
+        const rows = decodedData.split("\n").map(row => row.split(","));
+
+        // Crear un libro de Excel y una hoja de trabajo
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.aoa_to_sheet(rows);
+
+        // Agregar la hoja al libro
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Hoja1");
+
+        // Generar el archivo Excel
+        const excelBlob = XLSX.write(workbook, { bookType: "xlsx", type: "blob" });
         const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "archivo_generado.csv"; // Cambia el nombre según sea necesario
+        link.href = URL.createObjectURL(excelBlob);
+        link.download = "archivo_generado.xlsx"; // Cambia el nombre según sea necesario
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
