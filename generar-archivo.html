@@ -9,18 +9,22 @@
     <script>
         // Obtener el contenido de la URL
         const urlParams = new URLSearchParams(window.location.search);
-        let data = urlParams.get("data") || "";
+        let data = urlParams.get("data");
 
         let decodedData = "";
 
         try {
+            if (!data) {
+                throw new Error("No se encontró el parámetro 'data' en la URL.");
+            }
+
             // Decodificar el contenido
             decodedData = decodeURIComponent(data);
         } catch (error) {
-            console.error("Error al decodificar la data:", error);
-            alert("La información de la URL no está correctamente codificada.");
+            console.error("Error al decodificar la data:", error.message);
+            alert("La información de la URL no está correctamente codificada o es inválida.");
             document.body.innerHTML = "<p>Error: No se pudo procesar la información.</p>";
-            throw error;
+            throw error; // Termina el script si hay un error crítico
         }
 
         // Procesar los datos
@@ -36,9 +40,8 @@
             // Extraer encabezados y limpiarlos de los corchetes
             const headers = headerMatch[1].split(";").map(header => header.trim());
             
-            // Agregar lógica para eliminar la columna Index
+            // Eliminar la columna Index de los encabezados
             const cleanHeaders = headers.slice(1); // Eliminar el primer encabezado (Index)
-            const separatorCount = headers.length;
 
             // Dividir el contenido restante (quitando los encabezados)
             const dataContent = data.replace(headerRegex, "");
