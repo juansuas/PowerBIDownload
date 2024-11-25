@@ -22,6 +22,11 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+
+        // Cerrar la pestaña después de un breve retraso
+        setTimeout(() => {
+            window.close();
+        }, 1000); // Espera 1 segundo para asegurar la descarga antes de cerrar
     </script>
     <p>Generando archivo... Si la descarga no inicia, revisa la configuración del navegador.</p>
 </body>
