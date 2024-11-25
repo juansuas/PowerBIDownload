@@ -26,10 +26,23 @@
         // Agregar la hoja al libro
         XLSX.utils.book_append_sheet(workbook, worksheet, "Hoja1");
 
-        // Generar el archivo Excel
-        const excelBlob = XLSX.write(workbook, { bookType: "xlsx", type: "blob" });
+        // Función para convertir el binario a un Blob
+        function s2ab(s) {
+            const buf = new ArrayBuffer(s.length);
+            const view = new Uint8Array(buf);
+            for (let i = 0; i < s.length; i++) {
+                view[i] = s.charCodeAt(i) & 0xFF;
+            }
+            return buf;
+        }
+
+        // Generar el archivo Excel como binario
+        const excelBinary = XLSX.write(workbook, { bookType: "xlsx", type: "binary" });
+        const blob = new Blob([s2ab(excelBinary)], { type: "application/octet-stream" });
+
+        // Descargar el archivo
         const link = document.createElement("a");
-        link.href = URL.createObjectURL(excelBlob);
+        link.href = URL.createObjectURL(blob);
         link.download = "archivo_generado.xlsx"; // Cambia el nombre según sea necesario
         document.body.appendChild(link);
         link.click();
