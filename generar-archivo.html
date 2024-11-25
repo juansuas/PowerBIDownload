@@ -9,84 +9,19 @@
     <script>
         // Obtener el contenido de la URL
         const urlParams = new URLSearchParams(window.location.search);
-        let data = urlParams.get("data");
+        const data = urlParams.get("data") || "Columna1,Columna2,Columna3\nDato1,Dato2,Dato3";
 
-        let decodedData = "";
+        // Decodificar el contenido
+        const decodedData = decodeURIComponent(data);
 
-        try {
-            if (!data) {
-                throw new Error("No se encontró el parámetro 'data' en la URL.");
-            }
-
-            // Decodificar el contenido (manejo de doble codificación)
-            decodedData = decodeURIComponent(decodeURIComponent(data));
-        } catch (error) {
-            console.error("Error al decodificar la data:", error.message);
-            alert(
-                "La información de la URL no está correctamente codificada o es inválida.\n\n" +
-                "Sugerencia: verifica que los datos estén correctamente formateados y codificados."
-            );
-            document.body.innerHTML = "<p>Error: No se pudo procesar la información.</p>";
-            throw error; // Termina el script si hay un error crítico
-        }
-
-        // Depuración: muestra los datos decodificados
-        console.log("Datos decodificados:", decodedData);
-
-        // Procesar los datos
-        const processCSVData = (data) => {
-            // Detectar encabezados (línea que comienza con '[' y termina con ']')
-            const headerRegex = /^\[(.+?)\]/;
-            const headerMatch = data.match(headerRegex);
-            if (!headerMatch) {
-                alert("Formato incorrecto: no se detectaron encabezados.");
-                return "";
-            }
-
-            // Extraer encabezados y limpiarlos de los corchetes
-            const headers = headerMatch[1].split(";").map(header => header.trim());
-            
-            // Eliminar la columna Index de los encabezados
-            const cleanHeaders = headers.slice(1); // Eliminar el primer encabezado (Index)
-
-            // Dividir el contenido restante (quitando los encabezados)
-            const dataContent = data.replace(headerRegex, "");
-            const rows = [];
-            let currentRow = [];
-
-            // Detectar filas basándose en el "Index"
-            const cells = dataContent.split(";");
-            cells.forEach((cell) => {
-                currentRow.push(cell.trim()); // Agregar la celda a la fila actual
-                if (currentRow[0] === "Index") { // Detecta el índice como fin de la fila
-                    rows.push(currentRow.slice(1)); // Agregar fila, sin incluir el "Index"
-                    currentRow = []; // Reiniciar la fila actual
-                }
-            });
-
-            // Construir CSV
-            let csvContent = cleanHeaders.join(",") + "\n"; // Encabezados separados por coma
-            csvContent += rows
-                .map(row => row.join(",")) // Unir celdas de cada fila con comas
-                .join("\n"); // Unir filas con saltos de línea
-
-            return csvContent;
-        };
-
-        const csvData = processCSVData(decodedData);
-
-        if (csvData) {
-            // Crear el archivo y descargarlo
-            const blob = new Blob([csvData], { type: "text/csv" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "archivo_generado.csv";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } else {
-            document.body.innerHTML = "<p>Error: no se pudo generar el archivo CSV.</p>";
-        }
+        // Crear el archivo y descargarlo
+        const blob = new Blob([decodedData], { type: "text/csv" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "archivo_generado.csv"; // Cambia el nombre según sea necesario
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     </script>
     <p>Generando archivo... Si la descarga no inicia, revisa la configuración del navegador.</p>
 </body>
