@@ -1,28 +1,47 @@
-<script>
-    try {
-        // Obtener el parámetro "data" de la URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const jsonData = urlParams.get("data");
-        if (!jsonData) throw new Error("No se encontró el parámetro 'data'.");
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Archivo</title>
+</head>
+<body>
+    <script>
+        try {
+            // Obtener el parámetro "data" de la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const jsonData = urlParams.get("data");
 
-        // Parsear el JSON recibido
-        const parsedData = JSON.parse(decodeURIComponent(jsonData));
+            if (!jsonData) {
+                throw new Error("No se encontró el parámetro 'data' en la URL.");
+            }
 
-        // Construir el CSV
-        const header = parsedData.header.join(",");
-        const rows = parsedData.data.map(row => row.join(",")).join("\n");
-        const csvContent = `${header}\n${rows}`;
+            // Decodificar y parsear el JSON recibido
+            const parsedData = JSON.parse(decodeURIComponent(jsonData));
 
-        // Descargar el archivo CSV
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "archivo_generado.csv";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    } catch (error) {
-        console.error("Error al procesar el JSON:", error);
-        alert("Hubo un error al procesar los datos.");
-    }
-</script>
+            // Validar que el JSON contiene "header" y "data"
+            if (!parsedData.header || !parsedData.data) {
+                throw new Error("El JSON recibido no contiene los campos 'header' o 'data'.");
+            }
+
+            // Construir el contenido del CSV
+            const header = parsedData.header.join(","); // Encabezados en formato CSV
+            const rows = parsedData.data.map(row => row.join(",")).join("\n"); // Filas en formato CSV
+            const csvContent = `${header}\n${rows}`;
+
+            // Crear el archivo CSV
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "archivo_generado.csv"; // Nombre del archivo
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Error al procesar el JSON:", error);
+            alert("Hubo un error al procesar los datos. Por favor, verifica el formato del JSON.");
+        }
+    </script>
+    <p>Generando archivo... Si la descarga no inicia automáticamente, revisa la configuración del navegador.</p>
+</body>
+</html>
