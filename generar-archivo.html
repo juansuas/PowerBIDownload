@@ -10,18 +10,15 @@
         try {
             // Obtener el parámetro "data" de la URL
             const urlParams = new URLSearchParams(window.location.search);
-            let jsonData = urlParams.get("data");
+            const jsonData = urlParams.get("data");
 
             if (!jsonData) {
                 throw new Error("No se encontró el parámetro 'data' en la URL.");
             }
 
-            // Normalizar caracteres conflictivos antes de procesar
-            jsonData = jsonData.replaceAll("%%", "%25%") // Resolver dobles porcentajes
-                               .replaceAll("%22", '"');  // Resolver comillas dobles
-
             // Decodificar y parsear el JSON recibido
-            const parsedData = JSON.parse(decodeURIComponent(jsonData));
+            const decodedData = decodeURIComponent(jsonData);
+            const parsedData = JSON.parse(decodedData);
 
             // Validar que el JSON contiene "header" y "data"
             if (!parsedData.header || !parsedData.data) {
@@ -29,11 +26,11 @@
             }
 
             // Construir el contenido del CSV
-            const header = parsedData.header.join(","); // Encabezados en formato CSV
-            const rows = parsedData.data.map(row => row.join(",")).join("\n"); // Filas en formato CSV
+            const header = parsedData.header.join(",");
+            const rows = parsedData.data.map(row => row.join(",")).join("\n");
             const csvContent = `${header}\n${rows}`;
 
-            // Crear el archivo CSV
+            // Crear y descargar el archivo CSV
             const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
