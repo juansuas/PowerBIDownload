@@ -1,28 +1,28 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generar Archivo</title>
-</head>
-<body>
-    <script>
-        // Obtener el contenido de la URL
+<script>
+    try {
+        // Obtener el parámetro "data" de la URL
         const urlParams = new URLSearchParams(window.location.search);
-        const data = urlParams.get("data") || "Sin contenido";
+        const jsonData = urlParams.get("data");
+        if (!jsonData) throw new Error("No se encontró el parámetro 'data'.");
 
-        // Decodificar el contenido
-        const decodedData = decodeURIComponent(data);
+        // Parsear el JSON recibido
+        const parsedData = JSON.parse(decodeURIComponent(jsonData));
 
-        // Crear el archivo y descargarlo
-        const blob = new Blob([decodedData], { type: "text/plain" });
+        // Construir el CSV
+        const header = parsedData.header.join(",");
+        const rows = parsedData.data.map(row => row.join(",")).join("\n");
+        const csvContent = `${header}\n${rows}`;
+
+        // Descargar el archivo CSV
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "archivo_generado.txt"; // Cambia el nombre según sea necesario
+        link.download = "archivo_generado.csv";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    </script>
-    <p>Generando archivo... Si la descarga no inicia, revisa la configuración del navegador.</p>
-</body>
-</html>
+    } catch (error) {
+        console.error("Error al procesar el JSON:", error);
+        alert("Hubo un error al procesar los datos.");
+    }
+</script>
