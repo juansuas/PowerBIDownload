@@ -9,19 +9,54 @@
     <script>
         // Obtener el contenido de la URL
         const urlParams = new URLSearchParams(window.location.search);
-        const data = urlParams.get("data") || "Columna1,Columna2,Columna3\nDato1,Dato2,Dato3";
+        const data = urlParams.get("data") || "[Columna1];[Columna2];[Columna3]Dato1;Dato2;Dato3";
 
         // Decodificar el contenido
         const decodedData = decodeURIComponent(data);
 
-        // Crear el archivo y descargarlo
-        const blob = new Blob([decodedData], { type: "text/csv" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "archivo_generado.csv"; // Cambia el nombre según sea necesario
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Procesar los datos
+        const processCSVData = (data) => {
+            // Detectar encabezados (línea que comienza con '[' y termina con ']')
+            const headerRegex = /^\[(.+?)\]/;
+            const headerMatch = data.match(headerRegex);
+            if (!headerMatch) {
+                alert("Formato incorrecto: no se detectaron encabezados.");
+                return "";
+            }
+
+            // Extraer encabezados y limpiarlos de los corchetes
+            const headers = headerMatch[1].split(";").map(header => header.trim());
+            const separatorCount = headers.length;
+
+            // Dividir el resto de los datos
+            const dataRows = data
+                .replace(headerRegex, "") // Eliminar encabezados con corchetes
+                .split(new RegExp(`([^;]*;){${separatorCount - 1}}[^;]*`)) // Dividir por la cantidad esperada de separadores
+                .filter(row => row.trim() !== ""); // Eliminar filas vacías
+
+            // Construir CSV
+            let csvContent = headers.join(",") + "\n"; // Encabezados separados por coma
+            csvContent += dataRows
+                .map(row => row.split(";").join(",")) // Reemplazar ";" por ","
+                .join("\n"); // Unir filas con saltos de línea
+
+            return csvContent;
+        };
+
+        const csvData = processCSVData(decodedData);
+
+        if (csvData) {
+            // Crear el archivo y descargarlo
+            const blob = new Blob([csvData], { type: "text/csv" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "archivo_generado.csv";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            document.body.innerHTML = "<p>Error: no se pudo generar el archivo CSV.</p>";
+        }
     </script>
     <p>Generando archivo... Si la descarga no inicia, revisa la configuración del navegador.</p>
 </body>
