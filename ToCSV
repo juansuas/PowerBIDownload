@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Archivo CSV</title>
+</head>
+<body>
+    <script>
+        // Obtener el contenido de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const data = urlParams.get("data") || "Columna1,Columna2,Columna3\nDato1,Dato2,Dato3";
+
+        // Decodificar el contenido
+        const decodedData = decodeURIComponent(data);
+
+        // Crear el archivo y descargarlo
+        const blob = new Blob([decodedData], { type: "text/csv" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "archivo_generado.csv"; // Cambia el nombre según sea necesario
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    </script>
+    <p>Generando archivo... Si la descarga no inicia, revisa la configuración del navegador.</p>
+</body>
+</html>
