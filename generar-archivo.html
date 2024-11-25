@@ -18,14 +18,20 @@
                 throw new Error("No se encontró el parámetro 'data' en la URL.");
             }
 
-            // Decodificar el contenido
-            decodedData = decodeURIComponent(data);
+            // Decodificar el contenido (manejo de doble codificación)
+            decodedData = decodeURIComponent(decodeURIComponent(data));
         } catch (error) {
             console.error("Error al decodificar la data:", error.message);
-            alert("La información de la URL no está correctamente codificada o es inválida.");
+            alert(
+                "La información de la URL no está correctamente codificada o es inválida.\n\n" +
+                "Sugerencia: verifica que los datos estén correctamente formateados y codificados."
+            );
             document.body.innerHTML = "<p>Error: No se pudo procesar la información.</p>";
             throw error; // Termina el script si hay un error crítico
         }
+
+        // Depuración: muestra los datos decodificados
+        console.log("Datos decodificados:", decodedData);
 
         // Procesar los datos
         const processCSVData = (data) => {
@@ -50,7 +56,7 @@
 
             // Detectar filas basándose en el "Index"
             const cells = dataContent.split(";");
-            cells.forEach((cell, index) => {
+            cells.forEach((cell) => {
                 currentRow.push(cell.trim()); // Agregar la celda a la fila actual
                 if (currentRow[0] === "Index") { // Detecta el índice como fin de la fila
                     rows.push(currentRow.slice(1)); // Agregar fila, sin incluir el "Index"
