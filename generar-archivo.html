@@ -3,26 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generar Archivo CSV</title>
+    <title>Generar Archivo</title>
 </head>
 <body>
     <script>
-        // Obtener el contenido de la URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const data = urlParams.get("data") || "Columna1,Columna2,Columna3\nDato1,Dato2,Dato3";
+        try {
+            // Obtener el contenido de la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            let data = urlParams.get("data");
 
-        // Decodificar el contenido
-        const decodedData = decodeURIComponent(data);
+            if (!data) {
+                throw new Error("No se encontró el parámetro 'data'.");
+            }
 
-        // Crear el archivo y descargarlo
-        const blob = new Blob([decodedData], { type: "text/csv" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "archivo_generado.csv"; // Cambia el nombre según sea necesario
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+            // Decodificar el contenido de la URL
+            data = decodeURIComponent(data);
+
+            // Normalizar caracteres conflictivos (ajustar según tu caso)
+            data = data.replaceAll("%,", ",") // Remover codificaciones conflictivas
+                       .replaceAll("%%", "%") // Resolver dobles porcentajes
+                       .replaceAll("%22", '"') // Decodificar comillas
+                       .replaceAll("%0A", "\n"); // Decodificar saltos de línea
+
+            // Crear el archivo CSV
+            const blob = new Blob([data], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "archivo_generado.csv"; // Cambia el nombre si es necesario
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Error al procesar la URL:", error);
+            alert("Hubo un error al procesar los datos. Por favor, revisa la URL.");
+        }
     </script>
-    <p>Generando archivo... Si la descarga no inicia, revisa la configuración del navegador.</p>
+    <p>Generando archivo... Si la descarga no inicia automáticamente, revisa la configuración del navegador.</p>
 </body>
 </html>
