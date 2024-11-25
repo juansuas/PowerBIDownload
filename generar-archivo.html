@@ -7,69 +7,78 @@
 </head>
 <body>
     <script>
-    // Obtener el contenido de la URL
-    const urlParams = new URLSearchParams(window.location.search);
-    let data = urlParams.get("data") || "";
+        // Obtener el contenido de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        let data = urlParams.get("data") || "";
 
-    let decodedData = "";
+        let decodedData = "";
 
-    try {
-        // Decodificar el contenido
-        decodedData = decodeURIComponent(data);
-    } catch (error) {
-        console.error("Error al decodificar la data:", error);
-        alert("La información de la URL no está correctamente codificada.");
-        document.body.innerHTML = "<p>Error: No se pudo procesar la información.</p>";
-        throw error;
-    }
-
-    // Procesar los datos
-    const processCSVData = (data) => {
-        // Detectar encabezados (línea que comienza con '[' y termina con ']')
-        const headerRegex = /^\[(.+?)\]/;
-        const headerMatch = data.match(headerRegex);
-        if (!headerMatch) {
-            alert("Formato incorrecto: no se detectaron encabezados.");
-            return "";
+        try {
+            // Decodificar el contenido
+            decodedData = decodeURIComponent(data);
+        } catch (error) {
+            console.error("Error al decodificar la data:", error);
+            alert("La información de la URL no está correctamente codificada.");
+            document.body.innerHTML = "<p>Error: No se pudo procesar la información.</p>";
+            throw error;
         }
 
-        // Extraer encabezados y limpiarlos de los corchetes
-        const headers = headerMatch[1].split(";").map(header => header.trim());
-        const separatorCount = headers.length;
+        // Procesar los datos
+        const processCSVData = (data) => {
+            // Detectar encabezados (línea que comienza con '[' y termina con ']')
+            const headerRegex = /^\[(.+?)\]/;
+            const headerMatch = data.match(headerRegex);
+            if (!headerMatch) {
+                alert("Formato incorrecto: no se detectaron encabezados.");
+                return "";
+            }
 
-        // Dividir el resto de los datos en filas
-        const dataRows = data
-            .replace(headerRegex, "") // Eliminar encabezados con corchetes
-            .split("\n") // Dividir por salto de línea
-            .filter(row => row.trim() !== ""); // Eliminar filas vacías
+            // Extraer encabezados y limpiarlos de los corchetes
+            const headers = headerMatch[1].split(";").map(header => header.trim());
+            
+            // Agregar lógica para eliminar la columna Index
+            const cleanHeaders = headers.slice(1); // Eliminar el primer encabezado (Index)
+            const separatorCount = headers.length;
 
-        // Verificar si las filas tienen la cantidad correcta de columnas
-        const validRows = dataRows.filter(row => row.split(";").length === separatorCount);
+            // Dividir el contenido restante (quitando los encabezados)
+            const dataContent = data.replace(headerRegex, "");
+            const rows = [];
+            let currentRow = [];
 
-        // Construir CSV
-        let csvContent = headers.join(",") + "\n"; // Encabezados separados por coma
-        csvContent += validRows
-            .map(row => row.split(";").join(",")) // Reemplazar ";" por ","
-            .join("\n"); // Unir filas con saltos de línea
+            // Detectar filas basándose en el "Index"
+            const cells = dataContent.split(";");
+            cells.forEach((cell, index) => {
+                currentRow.push(cell.trim()); // Agregar la celda a la fila actual
+                if (currentRow[0] === "Index") { // Detecta el índice como fin de la fila
+                    rows.push(currentRow.slice(1)); // Agregar fila, sin incluir el "Index"
+                    currentRow = []; // Reiniciar la fila actual
+                }
+            });
 
-        return csvContent;
-    };
+            // Construir CSV
+            let csvContent = cleanHeaders.join(",") + "\n"; // Encabezados separados por coma
+            csvContent += rows
+                .map(row => row.join(",")) // Unir celdas de cada fila con comas
+                .join("\n"); // Unir filas con saltos de línea
 
-    const csvData = processCSVData(decodedData);
+            return csvContent;
+        };
 
-    if (csvData) {
-        // Crear el archivo y descargarlo
-        const blob = new Blob([csvData], { type: "text/csv" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "archivo_generado.csv";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    } else {
-        document.body.innerHTML = "<p>Error: no se pudo generar el archivo CSV.</p>";
-    }
-</script>
+        const csvData = processCSVData(decodedData);
+
+        if (csvData) {
+            // Crear el archivo y descargarlo
+            const blob = new Blob([csvData], { type: "text/csv" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "archivo_generado.csv";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            document.body.innerHTML = "<p>Error: no se pudo generar el archivo CSV.</p>";
+        }
+    </script>
     <p>Generando archivo... Si la descarga no inicia, revisa la configuración del navegador.</p>
 </body>
 </html>
