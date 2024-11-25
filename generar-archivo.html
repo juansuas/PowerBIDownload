@@ -16,8 +16,11 @@
         // Decodificar el contenido
         const decodedData = decodeURIComponent(data);
 
-        // Procesar los datos y convertirlos en un array para Excel
-        const rows = decodedData.split("\n").map(row => row.split(","));
+        // Procesar los datos correctamente, respetando la coma como separador decimal
+        const rows = decodedData.split("\n").map(row => {
+            // Usamos una expresión regular para separar correctamente por comas, excepto cuando están dentro de un valor numérico con decimales
+            return row.match(/(".*?"|[^",\s]+(,[^",\s]+)*|[^",]+)/g)?.map(cell => cell.trim()) || [];
+        });
 
         // Crear un libro de Excel y una hoja de trabajo
         const workbook = XLSX.utils.book_new();
