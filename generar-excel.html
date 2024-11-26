@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Archivo Excel</title>
+    <!-- Agregar la biblioteca SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <script>
+        // Obtener el contenido de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const data = urlParams.get("data") || "Columna1,Columna2,Columna3\nDato1,Dato2,Dato3";
+
+        // Decodificar el contenido
+        const decodedData = decodeURIComponent(data);
+
+        // Procesar los datos y convertirlos en un array para Excel
+        const rows = decodedData.split("\n").map(row => row.split(","));
+
+        // Crear un libro de Excel y una hoja de trabajo
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.aoa_to_sheet(rows);
+
+        // Agregar la hoja al libro
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Hoja1");
+
+        // Función para convertir el binario a un Blob
+        function s2ab(s) {
+            const buf = new ArrayBuffer(s.length);
+            const view = new Uint8Array(buf);
+            for (let i = 0; i < s.length; i++) {
+                view[i] = s.charCodeAt(i) & 0xFF;
+            }
+            return buf;
+        }
+
+        // Generar el archivo Excel como binario
+        const excelBinary = XLSX.write(workbook, { bookType: "xlsx", type: "binary" });
+        const blob = new Blob([s2ab(excelBinary)], { type: "application/octet-stream" });
+
+        // Descargar el archivo
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "Descarga_PBA.xlsx"; // Cambia el nombre según sea necesario
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Cerrar la pestaña después de un breve retraso
+        setTimeout(() => {
+            window.close();
+        }, 1000); // Espera 1 segundo para asegurar la descarga antes de cerrar
+    </script>
+    <p>Generando archivo... Si la descarga no inicia, revisa la configuración del navegador.</p>
+</body>
+</html>
