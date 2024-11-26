@@ -19,12 +19,6 @@
         // Procesar los datos y convertirlos en un array para Excel
         const rows = decodedData.split("\n").map(row => row.split(","));
         
-        // Reemplazar el separador , por ;
-        const modifiedData = decodedData.replace(/,/g, ";");
-
-       // Reemplazar el separador . por .
-        const modifiedData = decodedData.replace(/./g, ",");
-
         // Crear un libro de Excel y una hoja de trabajo
         const workbook = XLSX.utils.book_new();
         const worksheet = XLSX.utils.aoa_to_sheet(rows);
