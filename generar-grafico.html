@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Archivo Excel con Gráfico</title>
+    <!-- Agregar la biblioteca ExcelJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+</head>
+<body>
+    <script>
+        // Obtener el contenido de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const data = urlParams.get("data") || "Columna1,Columna2,Columna3,Columna4,Columna5,Columna6,Columna7\nDato1,Dato2,DatoX,Dato4,Dato5,Estatal,3000\nDato1,Dato2,DatoY,Dato4,Dato5,Privado,2000";
+
+        // Decodificar el contenido
+        const decodedData = decodeURIComponent(data);
+
+        // Procesar los datos y convertirlos en un array
+        const rows = decodedData.split("\n").map(row => row.split(","));
+
+        // Crear un libro de Excel
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Datos");
+
+        // Agregar los datos al Excel
+        rows.forEach((row, index) => {
+            worksheet.addRow(row);
+        });
+
+        // Agregar un gráfico de barras
+        const chartWorksheet = workbook.addWorksheet("Gráfico");
+        const chart = chartWorksheet.addChart({
+            type: "bar",
+            data: {
+                categories: rows.slice(1).map(row => row[2]), // Columna 3 (Eje X)
+                series: [
+                    {
+                        name: rows[0][6], // Columna 6 (Leyenda)
+                        values: rows.slice(1).map(row => parseFloat(row[6] || 0)) // Columna 7 (Valores Eje Y)
+                    }
+                ]
+            },
+            legend: {
+                position: "bottom"
+            },
+            title: {
+                text: "Gráfico de Ejemplo"
+            }
+        });
+
+        // Generar el archivo Excel
+        async function downloadExcel() {
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            });
+
+            // Descargar el archivo
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "Descarga_PBA_ConGrafico.xlsx"; // Cambia el nombre según sea necesario
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Cerrar la pestaña después de un breve retraso
+            setTimeout(() => {
+                window.close();
+            }, 1000); // Espera 1 segundo para asegurar la descarga antes de cerrar
+        }
+
+        // Llamar a la función para generar y descargar el archivo
+        downloadExcel();
+    </script>
+    <p>Generando archivo... Si la descarga no inicia, revisa la configuración del navegador.</p>
+</body>
+</html>
