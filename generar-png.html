@@ -4,45 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generar Gráfico PNG</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Cargar Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Biblioteca Chart.js -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #E6E6E6; /* Fondo del título */
+        }
+
+        h1 {
+            text-align: center;
+            color: #004D57; /* Color del título */
+        }
+    </style>
 </head>
 <body>
+    <h1 id="chartTitle"></h1>
     <canvas id="chartCanvas" width="800" height="400"></canvas> <!-- Canvas para el gráfico -->
     <script>
-        // Obtener el contenido de la URL
+        // Obtener datos de la URL
         const urlParams = new URLSearchParams(window.location.search);
-        const data = urlParams.get("data") || "EjeX,Leyenda,Valor\nEne,Grupo A,100\nFeb,Grupo A,200\nEne,Grupo B,150\nFeb,Grupo B,250";
+        const data = urlParams.get("data") || "Unidad Territorial,Sector,Valor,Indicador,Nivel,Año\nPBA,Total,97.3,Estudiantes,Secundario,2023\nPBA,Estatal,96.1,Estudiantes,Secundario,2023\nPBA,Privado,99.5,Estudiantes,Secundario,2023";
 
         // Decodificar y procesar los datos
         const decodedData = decodeURIComponent(data);
         const rows = decodedData.split("\n").map(row => row.split(","));
         const headers = rows.shift(); // Obtener encabezados
 
-        // Preparar los datos para Chart.js
-        const labels = [...new Set(rows.map(row => row[0]))]; // Valores únicos del eje X
+        // Extraer columnas específicas
+        const unidadTerritorialIndex = headers.indexOf("Unidad Territorial");
+        const sectorIndex = headers.indexOf("Sector");
+        const valorIndex = headers.indexOf("Valor");
+        const indicadorIndex = headers.indexOf("Indicador");
+        const nivelIndex = headers.indexOf("Nivel");
+        const añoIndex = headers.indexOf("Año");
+
+        // Preparar datos para Chart.js
+        const labels = [...new Set(rows.map(row => row[unidadTerritorialIndex]))]; // Valores únicos del eje X
         const datasets = [];
         const groupedData = {};
 
-        // Agrupar datos por leyenda
+        // Agrupar datos por sector
         rows.forEach(row => {
-            const [x, legend, value] = row;
-            if (!groupedData[legend]) {
-                groupedData[legend] = Array(labels.length).fill(null);
+            const sector = row[sectorIndex];
+            const unidad = row[unidadTerritorialIndex];
+            const valor = parseFloat(row[valorIndex]);
+            if (!groupedData[sector]) {
+                groupedData[sector] = Array(labels.length).fill(null);
             }
-            const index = labels.indexOf(x);
-            groupedData[legend][index] = parseFloat(value);
+            const index = labels.indexOf(unidad);
+            groupedData[sector][index] = valor;
         });
 
+        // Colores según sector
+        const sectorColors = {
+            "Total": "#009AAE",
+            "Estatal": "#9D9D9D",
+            "Privado": "#4B6B97"
+        };
+
         // Crear datasets para el gráfico
-        Object.keys(groupedData).forEach(legend => {
+        Object.keys(groupedData).forEach(sector => {
             datasets.push({
-                label: legend,
-                data: groupedData[legend],
-                backgroundColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.5)`,
-                borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
+                label: sector,
+                data: groupedData[sector],
+                backgroundColor: sectorColors[sector] || "#CCCCCC",
+                borderColor: sectorColors[sector] || "#CCCCCC",
                 borderWidth: 1,
             });
         });
+
+        // Concatenar título
+        const indicador = rows[0][indicadorIndex];
+        const nivel = rows[0][nivelIndex];
+        const año = rows[0][añoIndex];
+        const title = `${indicador} - Nivel: ${nivel} - Año: ${año}`;
+        document.getElementById("chartTitle").innerText = title;
 
         // Crear el gráfico
         const ctx = document.getElementById('chartCanvas').getContext('2d');
@@ -59,10 +95,19 @@
                         position: 'top',
                     },
                     title: {
-                        display: true,
-                        text: 'Gráfico Generado',
+                        display: false, // Ya mostramos el título en HTML
                     },
                 },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + " %"; // Añadir % al eje Y
+                            }
+                        }
+                    }
+                }
             },
         });
 
