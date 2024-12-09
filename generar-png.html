@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Gráfico PNG</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Cargar Chart.js -->
+</head>
+<body>
+    <canvas id="chartCanvas" width="800" height="400"></canvas> <!-- Canvas para el gráfico -->
+    <script>
+        // Obtener el contenido de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const data = urlParams.get("data") || "EjeX,Leyenda,Valor\nEne,Grupo A,100\nFeb,Grupo A,200\nEne,Grupo B,150\nFeb,Grupo B,250";
+
+        // Decodificar y procesar los datos
+        const decodedData = decodeURIComponent(data);
+        const rows = decodedData.split("\n").map(row => row.split(","));
+        const headers = rows.shift(); // Obtener encabezados
+
+        // Preparar los datos para Chart.js
+        const labels = [...new Set(rows.map(row => row[0]))]; // Valores únicos del eje X
+        const datasets = [];
+        const groupedData = {};
+
+        // Agrupar datos por leyenda
+        rows.forEach(row => {
+            const [x, legend, value] = row;
+            if (!groupedData[legend]) {
+                groupedData[legend] = Array(labels.length).fill(null);
+            }
+            const index = labels.indexOf(x);
+            groupedData[legend][index] = parseFloat(value);
+        });
+
+        // Crear datasets para el gráfico
+        Object.keys(groupedData).forEach(legend => {
+            datasets.push({
+                label: legend,
+                data: groupedData[legend],
+                backgroundColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.5)`,
+                borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
+                borderWidth: 1,
+            });
+        });
+
+        // Crear el gráfico
+        const ctx = document.getElementById('chartCanvas').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'bar', // Tipo de gráfico
+            data: {
+                labels: labels,
+                datasets: datasets,
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Gráfico Generado',
+                    },
+                },
+            },
+        });
+
+        // Descargar el gráfico como PNG
+        setTimeout(() => {
+            const link = document.createElement("a");
+            link.download = "grafico.png";
+            link.href = document.getElementById('chartCanvas').toDataURL("image/png");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Cerrar la pestaña después de un breve retraso
+            setTimeout(() => {
+                window.close();
+            }, 1000); // Espera 1 segundo para cerrar
+        }, 2000); // Espera para asegurar que el gráfico se genere correctamente
+    </script>
+</body>
+</html>
