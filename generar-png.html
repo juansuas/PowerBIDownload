@@ -12,95 +12,101 @@
         // Obtener parámetros de la URL
         const urlParams = new URLSearchParams(window.location.search);
         const data = urlParams.get("data");
-        const title = decodeURIComponent(urlParams.get("T")) || "Gráfico de Barras";
-        const ejeX = decodeURIComponent(urlParams.get("EX")) || "";
-        const ejeY = decodeURIComponent(urlParams.get("EY")) || "";
-        const legend = decodeURIComponent(urlParams.get("L")) || "";
+        const title = decodeURIComponent(urlParams.get("T") || "Gráfico de Barras");
 
-        // Decodificar los datos y convertirlos a una matriz
-        const decodedData = decodeURIComponent(data);
-        const rows = decodedData.split("\n").map(row => row.split(","));
-
-        // Obtener índices de las columnas para los ejes y leyenda
-        const headers = rows[0];
-        const indexX = headers.indexOf(ejeX);
-        const indexY = headers.indexOf(ejeY);
-        const indexLegend = headers.indexOf(legend);
-
-        if (indexX === -1 || indexY === -1) {
-            alert("Parámetros de eje no válidos. Verifica los nombres de las columnas.");
+        if (!data) {
+            alert("No se proporcionaron datos en la URL.");
         } else {
-            // Procesar los datos para el gráfico
-            const labels = [];
-            const datasets = {};
-            rows.slice(1).forEach(row => {
-                const label = row[indexX];
-                const value = parseFloat(row[indexY]);
-                const group = indexLegend !== -1 ? row[indexLegend] : "Default";
+            try {
+                // Decodificar los datos y convertirlos a una matriz
+                const decodedData = decodeURIComponent(data);
+                const rows = decodedData.split("\n").map(row => row.split(","));
 
-                if (!datasets[group]) {
-                    datasets[group] = {
-                        label: group,
-                        data: [],
-                        backgroundColor: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.7)`
-                    };
-                }
-                datasets[group].data.push(value);
-                if (!labels.includes(label)) {
-                    labels.push(label);
-                }
-            });
+                // Asume que la tabla tiene 3 columnas:
+                // - Columna 1: Eje X
+                // - Columna 2: Leyenda
+                // - Columna 3: Eje Y (valores)
+                const labels = []; // Eje X
+                const datasets = {}; // Leyendas y datos
 
-            // Configurar el gráfico con Chart.js
-            const ctx = document.getElementById("chartCanvas").getContext("2d");
-            const chart = new Chart(ctx, {
-                type: "bar",
-                data: {
-                    labels: labels,
-                    datasets: Object.entries(datasets).map(([key, value]) => value)
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: "top"
-                        },
-                        title: {
-                            display: true,
-                            text: title
-                        }
+                rows.slice(1).forEach(row => {
+                    const xValue = row[0]; // Primera columna (eje X)
+                    const legend = row[1]; // Segunda columna (leyenda)
+                    const yValue = parseFloat(row[2]); // Tercera columna (eje Y)
+
+                    // Agregar etiquetas únicas al eje X
+                    if (!labels.includes(xValue)) {
+                        labels.push(xValue);
+                    }
+
+                    // Crear o agregar datos al dataset correspondiente
+                    if (!datasets[legend]) {
+                        datasets[legend] = {
+                            label: legend,
+                            data: Array(labels.length).fill(0), // Inicializar con ceros
+                            backgroundColor: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.7)`
+                        };
+                    }
+
+                    // Asignar el valor al índice correspondiente del eje X
+                    const xIndex = labels.indexOf(xValue);
+                    datasets[legend].data[xIndex] = yValue;
+                });
+
+                // Configurar el gráfico con Chart.js
+                const ctx = document.getElementById("chartCanvas").getContext("2d");
+                const chart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: labels,
+                        datasets: Object.values(datasets)
                     },
-                    scales: {
-                        x: {
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: "top"
+                            },
                             title: {
                                 display: true,
-                                text: ejeX
+                                text: title
                             }
                         },
-                        y: {
-                            title: {
-                                display: true,
-                                text: ejeY
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: "Categorías"
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: "Valores"
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
 
-            // Descargar el gráfico como PNG
-            setTimeout(() => {
-                const link = document.createElement("a");
-                link.href = chart.toBase64Image();
-                link.download = "grafico.png";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                // Cerrar la pestaña después de la descarga
+                // Descargar el gráfico como PNG
                 setTimeout(() => {
-                    window.close();
-                }, 1000);
-            }, 2000); // Espera a que el gráfico se renderice antes de exportar
+                    const link = document.createElement("a");
+                    link.href = chart.toBase64Image();
+                    link.download = "grafico.png";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Cerrar la pestaña después de la descarga
+                    setTimeout(() => {
+                        window.close();
+                    }, 1000);
+                }, 2000); // Espera a que el gráfico se renderice antes de exportar
+            } catch (e) {
+                console.error("Error procesando los datos:", e);
+                alert("Hubo un error al procesar los datos.");
+            }
         }
     </script>
     <p>Generando gráfico... Si la descarga no inicia, revisa la configuración del navegador.</p>
