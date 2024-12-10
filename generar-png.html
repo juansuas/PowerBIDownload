@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generar Gráfico PNG</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script> <!-- Etiquetas de datos -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -39,52 +38,38 @@
         const urlParams = new URLSearchParams(window.location.search);
         const filename = urlParams.get("filename") || "grafico";
         const titulo = decodeURIComponent(urlParams.get("T")) || "Gráfico";
-        const ejeX = decodeURIComponent(urlParams.get("EX") || "").split(",");
-        const ejeY = decodeURIComponent(urlParams.get("EY") || "").split(",");
-        const leyendas = decodeURIComponent(urlParams.get("L") || "").split(",");
-
-        // Validar datos
-        if (!ejeX.length || !ejeY.length || !leyendas.length) {
-            alert("Error: los datos proporcionados no son válidos.");
-            throw new Error("Datos insuficientes para generar el gráfico.");
-        }
-
-        // Crear datasets dinámicos para Chart.js
-        const datasets = [];
-        const sectorColors = {
-            "Total": "#009AAE",
-            "Estatal": "#9D9D9D",
-            "Privado": "#4B6B97",
-        };
-
-        // Procesar datos: Mapear valores del eje Y con sus respectivas leyendas
-        let yIndex = 0; // Índice para recorrer `ejeY`
-        leyendas.forEach((leyenda) => {
-            const data = ejeX.map((_, index) => {
-                // Asegurar que haya datos suficientes para cada leyenda
-                const value = ejeY[yIndex] ? parseFloat(ejeY[yIndex]) : 0;
-                yIndex++;
-                return value;
-            });
-
-            datasets.push({
-                label: leyenda,
-                data: data,
-                backgroundColor: sectorColors[leyenda] || "#CCCCCC",
-                borderColor: sectorColors[leyenda] || "#CCCCCC",
-                borderWidth: 1,
-            });
-        });
+        const data = decodeURIComponent(urlParams.get("data") || "");
 
         // Mostrar el título
         document.getElementById("chartTitle").innerText = titulo;
 
-        // Crear el gráfico con Chart.js
+        // Procesar datos de la tabla (CSV)
+        const rows = data.split("%5Cn").map(row => row.split("%2C"));
+        const labels = [...new Set(rows.map(row => row[0]))]; // Unidad Territorial
+        const leyendas = [...new Set(rows.map(row => row[1]))]; // Sector
+
+        // Crear datasets dinámicos
+        const datasets = leyendas.map((leyenda) => {
+            return {
+                label: leyenda,
+                data: labels.map(label => {
+                    const match = rows.find(row => row[0] === label && row[1] === leyenda);
+                    return match ? parseFloat(match[2]) : 0; // Valor
+                }),
+                backgroundColor: leyenda === "Total" ? "#009AAE" :
+                                leyenda === "Estatal" ? "#9D9D9D" :
+                                leyenda === "Privado" ? "#4B6B97" : "#CCCCCC",
+                borderColor: "#FFFFFF",
+                borderWidth: 1,
+            };
+        });
+
+        // Crear el gráfico
         const ctx = document.getElementById('chartCanvas').getContext('2d');
         const chart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ejeX, // Eje X
+                labels: labels, // Eje X
                 datasets: datasets, // Datasets generados dinámicamente
             },
             options: {
@@ -93,33 +78,16 @@
                     legend: {
                         position: 'top',
                     },
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'end',
-                        color: '#000',
-                        font: {
-                            size: 10,
-                        },
-                        formatter: function (value) {
-                            return value.toFixed(1) + '%'; // Mostrar decimales
-                        },
-                    },
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            callback: function (value) {
-                                return value + "%"; // Formato del eje Y
-                            },
-                        },
                     },
                 },
             },
-            plugins: [ChartDataLabels],
         });
 
-        // Descargar el gráfico como PNG
+        // Descargar como PNG
         setTimeout(() => {
             const link = document.createElement("a");
             link.download = filename + ".png";
