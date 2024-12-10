@@ -36,25 +36,35 @@
     <script>
         // Obtener parámetros de la URL
         const urlParams = new URLSearchParams(window.location.search);
-        const filename = urlParams.get("filename") || "grafico";
-        const titulo = decodeURIComponent(urlParams.get("T")) || "Gráfico";
+        const filename = decodeURIComponent(urlParams.get("filename") || "grafico");
+        const titulo = decodeURIComponent(urlParams.get("T") || "Gráfico");
         const data = decodeURIComponent(urlParams.get("data") || "");
-
+        
         // Mostrar el título
         document.getElementById("chartTitle").innerText = titulo;
 
-        // Procesar datos de la tabla (CSV)
-        const rows = data.split("%5Cn").map(row => row.split("%2C"));
-        const labels = [...new Set(rows.map(row => row[0]))]; // Unidad Territorial
-        const leyendas = [...new Set(rows.map(row => row[1]))]; // Sector
+        // Procesar datos del parámetro `data`
+        const rows = data.split("\n").map(row => row.split("%2C")); // Separar filas y columnas
+        const headers = rows.shift(); // La primera fila son los encabezados
+        
+        // Validar encabezados
+        const colUnidad = headers.indexOf("Unidad Territorial");
+        const colSector = headers.indexOf("Sector");
+        const colValor = headers.indexOf("Valor");
+        if (colUnidad === -1 || colSector === -1 || colValor === -1) {
+            alert("Error: Encabezados de datos no válidos.");
+            throw new Error("Los datos proporcionados no tienen los encabezados esperados.");
+        }
 
-        // Crear datasets dinámicos
+        // Extraer datos únicos para el gráfico
+        const labels = [...new Set(rows.map(row => row[colUnidad]))]; // Eje X
+        const leyendas = [...new Set(rows.map(row => row[colSector]))]; // Leyendas
         const datasets = leyendas.map((leyenda) => {
             return {
                 label: leyenda,
                 data: labels.map(label => {
-                    const match = rows.find(row => row[0] === label && row[1] === leyenda);
-                    return match ? parseFloat(match[2]) : 0; // Valor
+                    const match = rows.find(row => row[colUnidad] === label && row[colSector] === leyenda);
+                    return match ? parseFloat(match[colValor]) : 0; // Valor
                 }),
                 backgroundColor: leyenda === "Total" ? "#009AAE" :
                                 leyenda === "Estatal" ? "#9D9D9D" :
