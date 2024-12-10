@@ -5,42 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generar Gráfico PNG</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #E6E6E6;
-        }
-
-        h1 {
-            text-align: center;
-            color: #004D57;
-            background-color: #E6E6E6;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        #chartContainer {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            margin: 20px auto;
-        }
-    </style>
 </head>
 <body>
-    <h1 id="chartTitle"></h1>
-    <div id="chartContainer">
-        <canvas id="chartCanvas" width="800" height="400"></canvas>
-    </div>
     <script>
-        // Función para decodificar componentes URI de forma segura
+        // Función para decodificar URI de forma segura
         function safeDecodeURIComponent(component) {
             try {
                 return decodeURIComponent(component);
             } catch (e) {
                 console.error("Error al decodificar componente URI:", e.message);
-                return component; // Devuelve sin decodificar si hay error
+                return component; // Devuelve el componente sin decodificar si hay error
             }
         }
 
@@ -49,37 +23,39 @@
         const filename = safeDecodeURIComponent(urlParams.get("filename") || "grafico");
         const title = safeDecodeURIComponent(urlParams.get("T") || "Gráfico");
         const data = safeDecodeURIComponent(urlParams.get("data") || "");
-        const exIndex = parseInt(urlParams.get("EX"), 10) - 1; // Índice base 0
+        const exIndex = parseInt(urlParams.get("EX"), 10) - 1;
         const eyIndex = parseInt(urlParams.get("EY"), 10) - 1;
         const lIndex = parseInt(urlParams.get("L"), 10) - 1;
 
-        // Mostrar el título
-        document.getElementById("chartTitle").innerText = title;
-
-        // Validar datos
+        // Validar datos y parámetros
         if (!data) {
             alert("Error: no se proporcionaron datos.");
             throw new Error("Los datos no están disponibles.");
+        }
+
+        if (exIndex < 0 || eyIndex < 0 || lIndex < 0) {
+            alert("Error: los índices deben ser mayores o iguales a 1.");
+            throw new Error("Índices inválidos.");
         }
 
         // Procesar el CSV de `data`
         const rows = data.split("%0A").map(row => row.split("%2C"));
         const headers = rows.shift(); // La primera fila son los encabezados
 
-        // Validar índices
+        // Validar índices en relación con los encabezados
         if (exIndex >= headers.length || eyIndex >= headers.length || lIndex >= headers.length) {
-            alert("Error: índices de columnas inválidos.");
-            throw new Error("Los índices proporcionados exceden el número de columnas.");
+            alert("Error: los índices exceden el número de columnas disponibles.");
+            throw new Error("Índices fuera de rango.");
         }
 
         // Extraer datos para el gráfico
-        const labels = [...new Set(rows.map(row => row[exIndex].trim()))]; // Eje X
-        const legends = [...new Set(rows.map(row => row[lIndex].trim()))]; // Leyendas
+        const labels = [...new Set(rows.map(row => row[exIndex]?.trim()))]; // Eje X
+        const legends = [...new Set(rows.map(row => row[lIndex]?.trim()))]; // Leyendas
         const datasets = legends.map((legend) => {
             return {
                 label: legend,
                 data: labels.map(label => {
-                    const match = rows.find(row => row[exIndex].trim() === label && row[lIndex].trim() === legend);
+                    const match = rows.find(row => row[exIndex]?.trim() === label && row[lIndex]?.trim() === legend);
                     return match ? parseFloat(match[eyIndex]) : 0; // Valor
                 }),
                 backgroundColor: legend === "Total" ? "#009AAE" :
@@ -91,12 +67,13 @@
         });
 
         // Crear el gráfico
-        const ctx = document.getElementById('chartCanvas').getContext('2d');
+        const ctx = document.createElement('canvas').getContext('2d');
+        document.body.appendChild(ctx.canvas);
         const chart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels, // Eje X
-                datasets: datasets, // Datasets generados dinámicamente
+                labels: labels,
+                datasets: datasets,
             },
             options: {
                 responsive: true,
@@ -117,7 +94,7 @@
         setTimeout(() => {
             const link = document.createElement("a");
             link.download = filename.replace(/ /g, "_") + ".png";
-            link.href = document.getElementById('chartCanvas').toDataURL("image/png");
+            link.href = ctx.canvas.toDataURL("image/png");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
