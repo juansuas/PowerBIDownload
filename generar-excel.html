@@ -12,9 +12,9 @@
         // Obtener los parámetros de la URL
         const urlParams = new URLSearchParams(window.location.search);
         const data = urlParams.get("data") || "Columna1,Columna2,Columna3\nDato1,Dato2,Dato3";
-        let filename = decodeURIComponent(urlParams.get("filename") || "archivo.xlsx");
+        let filename = decodeURIComponent(urlParams.get("filename") || "archivo");
 
-        // Asegurarse de que el nombre del archivo termine con .xlsx
+        // Forzar la extensión .xlsx si no está presente
         if (!filename.toLowerCase().endsWith(".xlsx")) {
             filename += ".xlsx";
         }
@@ -46,18 +46,13 @@
         const excelBinary = XLSX.write(workbook, { bookType: "xlsx", type: "binary" });
         const blob = new Blob([s2ab(excelBinary)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 
-        // Descargar el archivo utilizando un Blob y forzando la extensión
+        // Descargar el archivo utilizando un Blob
         const link = document.createElement("a");
-        if (navigator.msSaveOrOpenBlob) {
-            // Solución para Internet Explorer
-            navigator.msSaveOrOpenBlob(blob, filename);
-        } else {
-            link.href = URL.createObjectURL(blob);
-            link.download = filename; // Usar el nombre proporcionado por el parámetro filename
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+        link.href = URL.createObjectURL(blob);
+        link.download = filename; // Usar el nombre proporcionado por el parámetro filename con extensión
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
         // Cerrar la pestaña después de un breve retraso
         setTimeout(() => {
