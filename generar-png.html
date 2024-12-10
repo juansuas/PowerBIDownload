@@ -4,21 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generar Gráfico PNG</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Biblioteca Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script> <!-- Plugin para etiquetas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script> <!-- Etiquetas de datos -->
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #E6E6E6; /* Fondo del título */
+            background-color: #E6E6E6;
         }
 
         h1 {
             text-align: center;
-            color: #004D57; /* Color del título */
+            color: #004D57;
+            background-color: #E6E6E6;
+            padding: 10px;
+            border-radius: 5px;
         }
 
         #chartContainer {
-            background-color: white; /* Fondo blanco del gráfico */
+            background-color: white;
             padding: 20px;
             border-radius: 8px;
             width: 90%;
@@ -29,45 +32,60 @@
 <body>
     <h1 id="chartTitle"></h1>
     <div id="chartContainer">
-        <canvas id="chartCanvas" width="800" height="400"></canvas> <!-- Canvas para el gráfico -->
+        <canvas id="chartCanvas" width="800" height="400"></canvas>
     </div>
     <script>
         // Obtener parámetros de la URL
         const urlParams = new URLSearchParams(window.location.search);
         const filename = urlParams.get("filename") || "grafico";
-        const ejeY = decodeURIComponent(urlParams.get("EY") || "4088638,29367,9615,34190,110674,76468,260314").split(",");
-        const ejeX = decodeURIComponent(urlParams.get("EX") || "PBA,Campana,Exaltacion de la Cruz,Zarate,Pilar,Escobar,Region 11").split(",");
-        const leyendas = decodeURIComponent(urlParams.get("L") || "Total,Estatal,Privado").split(",");
-        const titulo = decodeURIComponent(urlParams.get("T") || "Estudiantes - Nivel: Secundario - Año: 2023");
+        const titulo = decodeURIComponent(urlParams.get("T")) || "Gráfico";
+        const ejeX = decodeURIComponent(urlParams.get("EX") || "").split(",");
+        const ejeY = decodeURIComponent(urlParams.get("EY") || "").split(",");
+        const leyendas = decodeURIComponent(urlParams.get("L") || "").split(",");
 
-        // Mostrar el título en la página
-        document.getElementById("chartTitle").innerText = titulo;
+        // Validar datos
+        if (!ejeX.length || !ejeY.length || !leyendas.length) {
+            alert("Error: los datos proporcionados no son válidos.");
+            throw new Error("Datos insuficientes para generar el gráfico.");
+        }
 
-        // Preparar datasets para Chart.js
+        // Crear datasets dinámicos para Chart.js
+        const datasets = [];
         const sectorColors = {
             "Total": "#009AAE",
             "Estatal": "#9D9D9D",
-            "Privado": "#4B6B97"
+            "Privado": "#4B6B97",
         };
 
-        const datasets = leyendas.map((leyenda, index) => {
-            const data = ejeY.map((value, i) => (index === i ? parseFloat(value) : null));
-            return {
+        // Procesar datos: Mapear valores del eje Y con sus respectivas leyendas
+        let yIndex = 0; // Índice para recorrer `ejeY`
+        leyendas.forEach((leyenda) => {
+            const data = ejeX.map((_, index) => {
+                // Asegurar que haya datos suficientes para cada leyenda
+                const value = ejeY[yIndex] ? parseFloat(ejeY[yIndex]) : 0;
+                yIndex++;
+                return value;
+            });
+
+            datasets.push({
                 label: leyenda,
                 data: data,
                 backgroundColor: sectorColors[leyenda] || "#CCCCCC",
                 borderColor: sectorColors[leyenda] || "#CCCCCC",
                 borderWidth: 1,
-            };
+            });
         });
 
-        // Crear el gráfico
+        // Mostrar el título
+        document.getElementById("chartTitle").innerText = titulo;
+
+        // Crear el gráfico con Chart.js
         const ctx = document.getElementById('chartCanvas').getContext('2d');
         const chart = new Chart(ctx, {
-            type: 'bar', // Tipo de gráfico
+            type: 'bar',
             data: {
-                labels: ejeX,
-                datasets: datasets,
+                labels: ejeX, // Eje X
+                datasets: datasets, // Datasets generados dinámicamente
             },
             options: {
                 responsive: true,
@@ -75,18 +93,15 @@
                     legend: {
                         position: 'top',
                     },
-                    title: {
-                        display: false, // Ya mostramos el título en HTML
-                    },
                     datalabels: {
                         anchor: 'end',
                         align: 'end',
-                        color: '#000', // Color del texto
+                        color: '#000',
                         font: {
                             size: 10,
                         },
                         formatter: function (value) {
-                            return value + '%'; // Formato del valor
+                            return value.toFixed(1) + '%'; // Mostrar decimales
                         },
                     },
                 },
@@ -95,19 +110,19 @@
                         beginAtZero: true,
                         ticks: {
                             callback: function (value) {
-                                return value + " %"; // Añadir % al eje Y
+                                return value + "%"; // Formato del eje Y
                             },
                         },
                     },
                 },
             },
-            plugins: [ChartDataLabels], // Activar las etiquetas
+            plugins: [ChartDataLabels],
         });
 
         // Descargar el gráfico como PNG
         setTimeout(() => {
             const link = document.createElement("a");
-            link.download = filename + ".png"; // Nombre dinámico del archivo
+            link.download = filename + ".png";
             link.href = document.getElementById('chartCanvas').toDataURL("image/png");
             document.body.appendChild(link);
             link.click();
@@ -116,8 +131,8 @@
             // Cerrar la pestaña después de un breve retraso
             setTimeout(() => {
                 window.close();
-            }, 1000); // Espera 1 segundo para cerrar
-        }, 2000); // Espera para asegurar que el gráfico se genere correctamente
+            }, 1000);
+        }, 2000);
     </script>
 </body>
 </html>
