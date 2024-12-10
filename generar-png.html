@@ -11,11 +11,11 @@
     <script>
         // Obtener parámetros de la URL
         const urlParams = new URLSearchParams(window.location.search);
-        const data = urlParams.get("data") || "";
-        const title = urlParams.get("T") || "Gráfico de Barras";
-        const ejeX = urlParams.get("EX") || "";
-        const ejeY = urlParams.get("EY") || "";
-        const legend = urlParams.get("L") || "";
+        const data = urlParams.get("data");
+        const title = decodeURIComponent(urlParams.get("T")) || "Gráfico de Barras";
+        const ejeX = decodeURIComponent(urlParams.get("EX")) || "";
+        const ejeY = decodeURIComponent(urlParams.get("EY")) || "";
+        const legend = decodeURIComponent(urlParams.get("L")) || "";
 
         // Decodificar los datos y convertirlos a una matriz
         const decodedData = decodeURIComponent(data);
@@ -28,7 +28,7 @@
         const indexLegend = headers.indexOf(legend);
 
         if (indexX === -1 || indexY === -1) {
-            alert("Parámetros de eje no válidos");
+            alert("Parámetros de eje no válidos. Verifica los nombres de las columnas.");
         } else {
             // Procesar los datos para el gráfico
             const labels = [];
@@ -45,7 +45,7 @@
                         backgroundColor: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.7)`
                     };
                 }
-                datasets[group].data.push({ x: label, y: value });
+                datasets[group].data.push(value);
                 if (!labels.includes(label)) {
                     labels.push(label);
                 }
@@ -57,7 +57,7 @@
                 type: "bar",
                 data: {
                     labels: labels,
-                    datasets: Object.values(datasets)
+                    datasets: Object.entries(datasets).map(([key, value]) => value)
                 },
                 options: {
                     responsive: true,
