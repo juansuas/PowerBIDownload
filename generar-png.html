@@ -5,14 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generar Gráfico PNG</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #f5f5f5; /* Fondo gris claro */
+            font-family: Arial, sans-serif;
+        }
+
+        canvas {
+            background-color: #ffffff; /* Fondo blanco del gráfico */
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #000000; /* Texto negro */
+            background-color: #e0e0e0; /* Fondo gris claro */
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        p {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
+    <h1 id="chart-title">Generando gráfico...</h1>
     <canvas id="chartCanvas" width="800" height="600"></canvas>
     <script>
         // Obtener parámetros de la URL
         const urlParams = new URLSearchParams(window.location.search);
         const data = urlParams.get("data");
         const title = decodeURIComponent(urlParams.get("T") || "Gráfico de Barras");
+        const filename = decodeURIComponent(urlParams.get("filename") || "grafico.png");
+
+        // Paleta de colores base
+        const colors = [
+            "#6B797C", // Base 1
+            "#362B2B", // Base 2
+            "#B08D72", // Base 3
+            "#4A6C74", // Complementario 1
+            "#A64B29", // Complementario 2
+            "#D1AB7A", // Complementario 3
+            "#2B3E4C", // Complementario 4
+        ];
 
         if (!data) {
             alert("No se proporcionaron datos en la URL.");
@@ -28,6 +64,7 @@
                 // - Columna 3: Eje Y (valores)
                 let labels = []; // Eje X
                 const datasets = {}; // Leyendas y datos
+                let colorIndex = 0;
 
                 rows.slice(1).forEach(row => {
                     const xValue = row[0]; // Primera columna (eje X)
@@ -44,12 +81,11 @@
                         datasets[legend] = {
                             label: legend,
                             data: [],
-                            backgroundColor: legend === "Total" ? "#009AAE" :
-                                            legend === "Estatal" ? "#9D9D9D" :
-                                            legend === "Privado" ? "#4B6B97" : "#CCCCCC",
+                            backgroundColor: colors[colorIndex % colors.length],
                             borderColor: "#FFFFFF",
                             borderWidth: 1
                         };
+                        colorIndex++; // Incrementar índice de color
                     }
 
                     // Asignar el valor al índice correspondiente del eje X
@@ -71,7 +107,7 @@
                 // Configurar el gráfico con Chart.js
                 const ctx = document.getElementById("chartCanvas").getContext("2d");
                 const chart = new Chart(ctx, {
-                    type: "line",
+                    type: "bar",
                     data: {
                         labels: labels,
                         datasets: Object.values(datasets)
@@ -91,24 +127,27 @@
                             x: {
                                 title: {
                                     display: true,
-                                    text: "Años"
+                                    text: "Categorías"
                                 }
                             },
                             y: {
                                 title: {
                                     display: true,
-                                    text: "Cantidad de Estudiantes"
+                                    text: "Valores"
                                 }
                             }
                         }
                     }
                 });
 
+                // Actualizar el título del gráfico
+                document.getElementById("chart-title").innerText = title;
+
                 // Descargar el gráfico como PNG
                 setTimeout(() => {
                     const link = document.createElement("a");
                     link.href = chart.toBase64Image();
-                    link.download = "grafico.png";
+                    link.download = filename; // Usar el nombre del archivo proporcionado
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
@@ -124,6 +163,6 @@
             }
         }
     </script>
-    <p>Generando gráfico... Si la descarga no inicia, revisa la configuración del navegador.</p>
+    <p>Si la descarga no inicia automáticamente, revisa la configuración del navegador.</p>
 </body>
 </html>
