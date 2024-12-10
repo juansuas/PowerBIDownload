@@ -12,7 +12,12 @@
         // Obtener los parámetros de la URL
         const urlParams = new URLSearchParams(window.location.search);
         const data = urlParams.get("data") || "Columna1,Columna2,Columna3\nDato1,Dato2,Dato3";
-        const filename = decodeURIComponent(urlParams.get("filename") || "archivo.xlsx"); // Nombre por defecto
+        let filename = decodeURIComponent(urlParams.get("filename") || "archivo.xlsx");
+
+        // Asegurarse de que el nombre del archivo termine con .xlsx
+        if (!filename.endsWith(".xlsx")) {
+            filename += ".xlsx";
+        }
 
         // Decodificar el contenido
         const decodedData = decodeURIComponent(data);
@@ -39,7 +44,7 @@
 
         // Generar el archivo Excel como binario
         const excelBinary = XLSX.write(workbook, { bookType: "xlsx", type: "binary" });
-        const blob = new Blob([s2ab(excelBinary)], { type: "application/octet-stream" });
+        const blob = new Blob([s2ab(excelBinary)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 
         // Descargar el archivo
         const link = document.createElement("a");
