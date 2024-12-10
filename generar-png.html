@@ -4,150 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generar Gráfico PNG</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Biblioteca Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script> <!-- Plugin para etiquetas -->
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #E6E6E6; /* Fondo del título */
-        }
-
-        h1 {
-            text-align: center;
-            color: #004D57; /* Color del título */
-        }
-
-        #chartContainer {
-            background-color: white; /* Fondo blanco del gráfico */
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            margin: 20px auto;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1 id="chartTitle"></h1>
-    <div id="chartContainer">
-        <canvas id="chartCanvas" width="800" height="400"></canvas> <!-- Canvas para el gráfico -->
-    </div>
+    <canvas id="chartCanvas" width="800" height="600"></canvas>
     <script>
-        // Obtener datos de la URL
+        // Obtener parámetros de la URL
         const urlParams = new URLSearchParams(window.location.search);
-        const data = urlParams.get("data") || "Unidad Territorial,Sector,Valor,Indicador,Nivel,Año\nPBA,Total,97.3,Estudiantes,Secundario,2023\nPBA,Estatal,96.1,Estudiantes,Secundario,2023\nPBA,Privado,99.5,Estudiantes,Secundario,2023";
+        const data = urlParams.get("data") || "";
+        const title = urlParams.get("T") || "Gráfico de Barras";
+        const ejeX = urlParams.get("EX") || "";
+        const ejeY = urlParams.get("EY") || "";
+        const legend = urlParams.get("L") || "";
 
-        // Decodificar y procesar los datos
+        // Decodificar los datos y convertirlos a una matriz
         const decodedData = decodeURIComponent(data);
         const rows = decodedData.split("\n").map(row => row.split(","));
-        const headers = rows.shift(); // Obtener encabezados
 
-        // Extraer columnas específicas
-        const unidadTerritorialIndex = headers.indexOf("Unidad Territorial");
-        const sectorIndex = headers.indexOf("Sector");
-        const valorIndex = headers.indexOf("Valor");
-        const indicadorIndex = headers.indexOf("Indicador");
-        const nivelIndex = headers.indexOf("Nivel");
-        const añoIndex = headers.indexOf("Año");
+        // Obtener índices de las columnas para los ejes y leyenda
+        const headers = rows[0];
+        const indexX = headers.indexOf(ejeX);
+        const indexY = headers.indexOf(ejeY);
+        const indexLegend = headers.indexOf(legend);
 
-        // Preparar datos para Chart.js
-        const labels = [...new Set(rows.map(row => row[unidadTerritorialIndex]))]; // Valores únicos del eje X
-        const datasets = [];
-        const groupedData = {};
+        if (indexX === -1 || indexY === -1) {
+            alert("Parámetros de eje no válidos");
+        } else {
+            // Procesar los datos para el gráfico
+            const labels = [];
+            const datasets = {};
+            rows.slice(1).forEach(row => {
+                const label = row[indexX];
+                const value = parseFloat(row[indexY]);
+                const group = indexLegend !== -1 ? row[indexLegend] : "Default";
 
-        // Agrupar datos por sector
-        rows.forEach(row => {
-            const sector = row[sectorIndex];
-            const unidad = row[unidadTerritorialIndex];
-            const valor = parseFloat(row[valorIndex]);
-            if (!groupedData[sector]) {
-                groupedData[sector] = Array(labels.length).fill(null);
-            }
-            const index = labels.indexOf(unidad);
-            groupedData[sector][index] = valor;
-        });
-
-        // Colores según sector
-        const sectorColors = {
-            "Total": "#009AAE",
-            "Estatal": "#9D9D9D",
-            "Privado": "#4B6B97"
-        };
-
-        // Crear datasets para el gráfico
-        Object.keys(groupedData).forEach(sector => {
-            datasets.push({
-                label: sector,
-                data: groupedData[sector],
-                backgroundColor: sectorColors[sector] || "#CCCCCC",
-                borderColor: sectorColors[sector] || "#CCCCCC",
-                borderWidth: 1,
+                if (!datasets[group]) {
+                    datasets[group] = {
+                        label: group,
+                        data: [],
+                        backgroundColor: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.7)`
+                    };
+                }
+                datasets[group].data.push({ x: label, y: value });
+                if (!labels.includes(label)) {
+                    labels.push(label);
+                }
             });
-        });
 
-        // Concatenar título
-        const indicador = rows[0][indicadorIndex];
-        const nivel = rows[0][nivelIndex];
-        const año = rows[0][añoIndex];
-        const title = `${indicador} - Nivel: ${nivel} - Año: ${año}`;
-        document.getElementById("chartTitle").innerText = title;
-
-        // Crear el gráfico
-        const ctx = document.getElementById('chartCanvas').getContext('2d');
-        const chart = new Chart(ctx, {
-            type: 'bar', // Tipo de gráfico
-            data: {
-                labels: labels,
-                datasets: datasets,
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    title: {
-                        display: false, // Ya mostramos el título en HTML
-                    },
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'end',
-                        color: '#000', // Color del texto
-                        font: {
-                            size: 10,
-                        },
-                        formatter: function (value) {
-                            return value + '%'; // Formato del valor
-                        },
-                    },
+            // Configurar el gráfico con Chart.js
+            const ctx = document.getElementById("chartCanvas").getContext("2d");
+            const chart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: Object.values(datasets)
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function (value) {
-                                return value + " %"; // Añadir % al eje Y
-                            },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: "top"
                         },
+                        title: {
+                            display: true,
+                            text: title
+                        }
                     },
-                },
-            },
-            plugins: [ChartDataLabels], // Activar las etiquetas
-        });
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: ejeX
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: ejeY
+                            }
+                        }
+                    }
+                }
+            });
 
-        // Descargar el gráfico como PNG
-        setTimeout(() => {
-            const link = document.createElement("a");
-            link.download = "grafico.png";
-            link.href = document.getElementById('chartCanvas').toDataURL("image/png");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            // Cerrar la pestaña después de un breve retraso
+            // Descargar el gráfico como PNG
             setTimeout(() => {
-                window.close();
-            }, 1000); // Espera 1 segundo para cerrar
-        }, 2000); // Espera para asegurar que el gráfico se genere correctamente
+                const link = document.createElement("a");
+                link.href = chart.toBase64Image();
+                link.download = "grafico.png";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Cerrar la pestaña después de la descarga
+                setTimeout(() => {
+                    window.close();
+                }, 1000);
+            }, 2000); // Espera a que el gráfico se renderice antes de exportar
+        }
     </script>
+    <p>Generando gráfico... Si la descarga no inicia, revisa la configuración del navegador.</p>
 </body>
 </html>
