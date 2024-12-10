@@ -7,9 +7,10 @@
 </head>
 <body>
     <script>
-        // Obtener el contenido de la URL
+        // Obtener los parámetros de la URL
         const urlParams = new URLSearchParams(window.location.search);
         const data = urlParams.get("data") || "Columna1,Columna2,Columna3\nDato1,Dato2,Dato3";
+        const filename = decodeURIComponent(urlParams.get("filename") || "archivo.csv"); // Nombre por defecto
 
         // Decodificar el contenido
         const decodedData = decodeURIComponent(data);
@@ -21,7 +22,7 @@
         const blob = new Blob([modifiedData], { type: "text/csv" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "Descarga_PBA.csv"; // Cambia el nombre según sea necesario
+        link.download = filename; // Usar el nombre proporcionado por el parámetro filename
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
