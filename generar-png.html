@@ -23,29 +23,33 @@
         const filename = safeDecodeURIComponent(urlParams.get("filename") || "grafico");
         const title = safeDecodeURIComponent(urlParams.get("T") || "Gráfico");
         const data = safeDecodeURIComponent(urlParams.get("data") || "");
-        const exIndex = parseInt(urlParams.get("EX"), 10) - 1;
-        const eyIndex = parseInt(urlParams.get("EY"), 10) - 1;
-        const lIndex = parseInt(urlParams.get("L"), 10) - 1;
+        const exColumn = safeDecodeURIComponent(urlParams.get("EX") || ""); // Columna para el eje X
+        const eyColumn = safeDecodeURIComponent(urlParams.get("EY") || ""); // Columna para el eje Y
+        const lColumn = safeDecodeURIComponent(urlParams.get("L") || ""); // Columna para la leyenda
 
         // Validar datos y parámetros
         if (!data) {
             alert("Error: no se proporcionaron datos.");
             throw new Error("Los datos no están disponibles.");
         }
-
-        if (exIndex < 0 || eyIndex < 0 || lIndex < 0) {
-            alert("Error: los índices deben ser mayores o iguales a 1.");
-            throw new Error("Índices inválidos.");
+        if (!exColumn || !eyColumn || !lColumn) {
+            alert("Error: los nombres de las columnas EX, EY y L deben ser proporcionados.");
+            throw new Error("Columnas no especificadas.");
         }
 
         // Procesar el CSV de `data`
         const rows = data.split("%0A").map(row => row.split("%2C"));
         const headers = rows.shift(); // La primera fila son los encabezados
 
-        // Validar índices en relación con los encabezados
-        if (exIndex >= headers.length || eyIndex >= headers.length || lIndex >= headers.length) {
-            alert("Error: los índices exceden el número de columnas disponibles.");
-            throw new Error("Índices fuera de rango.");
+        // Identificar índices de las columnas
+        const exIndex = headers.indexOf(exColumn);
+        const eyIndex = headers.indexOf(eyColumn);
+        const lIndex = headers.indexOf(lColumn);
+
+        // Validar índices
+        if (exIndex === -1 || eyIndex === -1 || lIndex === -1) {
+            alert("Error: uno o más nombres de columnas no coinciden con los encabezados.");
+            throw new Error("Columnas no encontradas en los encabezados.");
         }
 
         // Extraer datos para el gráfico
