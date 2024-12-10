@@ -14,11 +14,6 @@
         const data = urlParams.get("data") || "Columna1,Columna2,Columna3\nDato1,Dato2,Dato3";
         let filename = decodeURIComponent(urlParams.get("filename") || "archivo");
 
-        // Forzar la extensión .xlsx si no está presente
-        if (!filename.toLowerCase().endsWith(".xlsx")) {
-            filename += ".xlsx";
-        }
-
         // Decodificar el contenido
         const decodedData = decodeURIComponent(data);
 
@@ -49,7 +44,7 @@
         // Descargar el archivo utilizando un Blob
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = filename; // Usar el nombre proporcionado por el parámetro filename con extensión
+        link.download = filename + ".xlsx"; // Usar el nombre proporcionado por el parámetro filename con extensión
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
