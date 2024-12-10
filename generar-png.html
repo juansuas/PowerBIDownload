@@ -1,3 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Gráfico PNG</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <canvas id="chartCanvas" width="800" height="600"></canvas>
+    <script>
+        // Obtener parámetros de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const data = urlParams.get("data");
+        const title = decodeURIComponent(urlParams.get("T") || "Gráfico de Barras");
+
+        if (!data) {
+            alert("No se proporcionaron datos en la URL.");
+        } else {
+            try {
+                // Decodificar los datos y convertirlos a una matriz
+                const decodedData = decodeURIComponent(data);
+                const rows = decodedData.split("\n").map(row => row.split(","));
+
+                // Asume que la tabla tiene 3 columnas:
+                // - Columna 1: Eje X
+                // - Columna 2: Leyenda
+                // - Columna 3: Eje Y (valores)
+                let labels = []; // Eje X
+                const datasets = {}; // Leyendas y datos
+
+                rows.slice(1).forEach(row => {
+                    const xValue = row[0]; // Primera columna (eje X)
+                    const legend = row[1]; // Segunda columna (leyenda)
+                    const yValue = parseFloat(row[2]); // Tercera columna (eje Y)
+
+                    // Agregar etiquetas únicas al eje X
+                    if (!labels.includes(xValue)) {
+                        labels.push(xValue);
+                    }
+
+                    // Crear o agregar datos al dataset correspondiente
+                    if (!datasets[legend]) {
+                        datasets[legend] = {
+                            label: legend,
+                            data: [],
+                            backgroundColor: legend === "Total" ? "#009AAE" :
+                                            legend === "Estatal" ? "#9D9D9D" :
+                                            legend === "Privado" ? "#4B6B97" : "#CCCCCC",
+                            borderColor: "#FFFFFF",
+                            borderWidth: 1
+                        };
+                    }
+
+                    // Asignar el valor al índice correspondiente del eje X
+                    const xIndex = labels.indexOf(xValue);
+                    datasets[legend].data[xIndex] = yValue;
+                });
+
+                // Ordenar etiquetas del eje X de manera ascendente
+                labels = labels.sort((a, b) => a - b);
+
+                // Alinear los datos de los datasets con las etiquetas ordenadas
+                Object.values(datasets).forEach(dataset => {
+                    dataset.data = labels.map(label => {
+                        const xIndex = rows.slice(1).findIndex(row => row[0] === label && row[1] === dataset.label);
+                        return xIndex !== -1 ? parseFloat(rows[xIndex + 1][2]) : 0; // Asegura que no haya valores "undefined"
+                    });
+                });
+
+                // Configurar el gráfico con Chart.js
+                const ctx = document.getElementById("chartCanvas").getContext("2d");
+                const chart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: labels,
+                        datasets: Object.values(datasets)
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: "top"
+                            },
+                            title: {
+                                display: true,
+                                text: title
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
                                     display: true,
                                     text: "Años"
                                 }
