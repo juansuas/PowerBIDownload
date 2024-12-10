@@ -15,7 +15,7 @@
         let filename = decodeURIComponent(urlParams.get("filename") || "archivo.xlsx");
 
         // Asegurarse de que el nombre del archivo termine con .xlsx
-        if (!filename.endsWith(".xlsx")) {
+        if (!filename.toLowerCase().endsWith(".xlsx")) {
             filename += ".xlsx";
         }
 
@@ -46,13 +46,18 @@
         const excelBinary = XLSX.write(workbook, { bookType: "xlsx", type: "binary" });
         const blob = new Blob([s2ab(excelBinary)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 
-        // Descargar el archivo
+        // Descargar el archivo utilizando un Blob y forzando la extensión
         const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = filename; // Usar el nombre proporcionado por el parámetro filename
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        if (navigator.msSaveOrOpenBlob) {
+            // Solución para Internet Explorer
+            navigator.msSaveOrOpenBlob(blob, filename);
+        } else {
+            link.href = URL.createObjectURL(blob);
+            link.download = filename; // Usar el nombre proporcionado por el parámetro filename
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
 
         // Cerrar la pestaña después de un breve retraso
         setTimeout(() => {
