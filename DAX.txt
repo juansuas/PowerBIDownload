@@ -1,0 +1,41 @@
+# Consideraciones de las medidas en DAX para enviar mediante URL la data.
+Actualmente el enfoque es un envío por tipo de archivo. Podrías desacoplarse y reutilizar el código, convirtiendo el tipo de archivo en un parámetro a enviar en la URL y que el HTML lo procese. 
+
+En DAX hay que hacer una combinación de TOCSV() con SUBSTITUTE() para lograr una URL a medida. 
+Este es el caso para CSV:
+
+DescargaCSV = 
+// Capturamos el nombre para el archivo y sustituimos los espacios. Puede ser ese caractér u otro.
+VAR _FILENAME = "&filename=" &SUBSTITUTE(SELECTEDVALUE('Tabla'[columna]), " ", "_")
+
+// Usamos TOCSV() combinado con SELECTEDCOLUMNS() para generar la tabla en formato CSV con encabezados personalizados. 
+// Agregamos "Index" para manejar los saltos de línea.
+
+VAR _TABLA = TOCSV(
+    SELECTCOLUMNS('Tabla',
+    "Index", "Index",
+    "Columna1", 'Tabla'[Columna1],
+    "Columna2", 'Tabla'[Columna2],
+    "Métrica1", [Métrica1]
+    ),
+    50000, ";"
+)
+
+// Corregimos el encoding ya que DAX no tiene una función propia para ello. Esto es algo rústico y hay que mirarlo con cautela.
+
+VAR _SUB0 = SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(_TABLA, "á", "a"), "é", "e"), "í", "i"), "ó", "o"), "ú", "u"), "Á", "A"), "É", "E"), "Í", "I"), "Ó", "O"), "Ú", "U"), "ñ", "n"), "Ñ", "N")
+VAR _SUB1 = SUBSTITUTE(_SUB0, "[", "")
+VAR _SUB2 = SUBSTITUTE(_SUB1, "]", "")
+VAR _SUB3 = SUBSTITUTE(_SUB2, "%", "Porcentaje")
+VAR _SUB4 = SUBSTITUTE(_SUB3, "Index;", "%0A")
+VAR _SUB5 = SUBSTITUTE(_SUB4, ";", "%2C")
+VAR _FINAL = "&data=" &RIGHT(_SUB5, LEN(_SUB5) - 3)
+
+// Generamos la URL unificada con el HTML destino y los parámetros
+RETURN
+"https://servidor/archivo-con-codidgo.html?" 
+    &_FILENAME
+        &_FINAL
+
+
+#Para XLSX es igual. Para PNG hay que hacer algunas modificaciones. Pasar sólo 3 columnas: Eje X, Leyenda, Eje Y. Agregar el parámetro T= para el título
