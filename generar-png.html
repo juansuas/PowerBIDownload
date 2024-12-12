@@ -144,6 +144,13 @@
                 // Actualizar el título del gráfico
                 document.getElementById("chart-title").innerText = title;
 
+                
+                // Antes de exportar el gráfico
+                const canvas = document.getElementById("chartCanvas");
+                const ctx = canvas.getContext("2d");
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
                 // Descargar el gráfico como PNG
                 setTimeout(() => {
                     const link = document.createElement("a");
