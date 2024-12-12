@@ -31,25 +31,13 @@
 </head>
 <body>
     <h1 id="chart-title">Generando gráfico...</h1>
-    <canvas id="chartCanvas" width="800" height="600" style="background-color: #FFFFFF;"></canvas>
+    <canvas id="chartCanvas" width="800" height="600"></canvas>
     <script>
         // Obtener parámetros de la URL
         const urlParams = new URLSearchParams(window.location.search);
         const data = urlParams.get("data");
         const title = decodeURIComponent(urlParams.get("T") || "Gráfico de Barras");
         const filename = decodeURIComponent(urlParams.get("filename") || "grafico.png");
-
-        // Paleta de colores base
-        const colors = [
-            "#6B797C", // Base 1
-            "#362B2B", // Base 2
-            "#B08D72", // Base 3
-            "#4A6C74", // Complementario 1
-            "#A64B29", // Complementario 2
-            "#D1AB7A", // Complementario 3
-            "#2B3E4C",
-            "#FFFFFF" // Complementario 4
-        ];
 
         if (!data) {
             alert("No se proporcionaron datos en la URL.");
@@ -63,98 +51,72 @@
                 // - Columna 1: Eje X
                 // - Columna 2: Leyenda
                 // - Columna 3: Eje Y (valores)
-                let labels = []; // Eje X
-                const datasets = {}; // Leyendas y datos
-                let colorIndex = 0;
-
-                rows.slice(1).forEach(row => {
-                    const xValue = row[0]; // Primera columna (eje X)
-                    const legend = row[1]; // Segunda columna (leyenda)
-                    const yValue = parseFloat(row[2]); // Tercera columna (eje Y)
-
-                    // Agregar etiquetas únicas al eje X
-                    if (!labels.includes(xValue)) {
-                        labels.push(xValue);
-                    }
-
-                    // Crear o agregar datos al dataset correspondiente
-                    if (!datasets[legend]) {
-                        datasets[legend] = {
-                            label: legend,
-                            data: [],
-                            backgroundColor: colors[colorIndex % colors.length],
-                            borderColor: "#FFFFFF",
-                            borderWidth: 1
-                        };
-                        colorIndex++; // Incrementar índice de color
-                    }
-
-                    // Asignar el valor al índice correspondiente del eje X
-                    const xIndex = labels.indexOf(xValue);
-                    datasets[legend].data[xIndex] = yValue;
+                const labels = [...new Set(rows.slice(1).map(row => row[0]))]; // Eje X
+                const datasets = [...new Set(rows.slice(1).map(row => row[1]))].map((legend, index) => {
+                    return {
+                        label: legend,
+                        data: labels.map(label => {
+                            const match = rows.find(row => row[0] === label && row[1] === legend);
+                            return match ? parseFloat(match[2]) : 0;
+                        }),
+                        backgroundColor: ["#009AAE", "#9D9D9D", "#4B6B97"][index % 3], // Colores fijos
+                        borderColor: "#FFFFFF",
+                        borderWidth: 1,
+                    };
                 });
 
-                // Ordenar etiquetas del eje X de manera ascendente
-                labels = labels.sort((a, b) => a - b);
+                // Crear el gráfico
+                const canvas = document.getElementById("chartCanvas");
+                const ctx = canvas.getContext("2d");
 
-                // Alinear los datos de los datasets con las etiquetas ordenadas
-                Object.values(datasets).forEach(dataset => {
-                    dataset.data = labels.map(label => {
-                        const xIndex = rows.slice(1).findIndex(row => row[0] === label && row[1] === dataset.label);
-                        return xIndex !== -1 ? parseFloat(rows[xIndex + 1][2]) : 0; // Asegura que no haya valores "undefined"
-                    });
-                });
+                // Dibujar fondo blanco antes del gráfico
+                ctx.fillStyle = "#FFFFFF"; // Fondo blanco
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Configurar el gráfico con Chart.js
-                const ctx = document.getElementById("chartCanvas").getContext("2d");
                 const chart = new Chart(ctx, {
                     type: "bar",
                     data: {
                         labels: labels,
-                        datasets: Object.values(datasets)
+                        datasets: datasets,
                     },
                     options: {
                         responsive: true,
                         plugins: {
                             legend: {
-                                position: "top"
+                                position: "top",
                             },
                             title: {
                                 display: true,
-                                text: title
-                            }
+                                text: title,
+                                color: "#004D57",
+                                font: {
+                                    size: 16,
+                                },
+                                padding: { top: 10, bottom: 30 },
+                                backgroundColor: "#E6E6E6",
+                            },
                         },
                         scales: {
                             x: {
                                 title: {
                                     display: true,
-                                    text: "Categorías"
-                                }
+                                    text: "Categorías",
+                                },
                             },
                             y: {
                                 title: {
                                     display: true,
-                                    text: "Valores"
-                                }
-                            }
-                        }
-                    }
+                                    text: "Valores",
+                                },
+                            },
+                        },
+                    },
                 });
 
-                // Actualizar el título del gráfico
-                document.getElementById("chart-title").innerText = title;
-
-                
-                // Antes de exportar el gráfico
-                const canvas = document.getElementById("chartCanvas");
-                const ctx = canvas.getContext("2d");
-                ctx.fillStyle = "#FFFFFF";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
                 // Descargar el gráfico como PNG
                 setTimeout(() => {
                     const link = document.createElement("a");
-                    link.href = chart.toBase64Image();
+                    link.href = canvas.toDataURL("image/png");
                     link.download = filename; // Usar el nombre del archivo proporcionado
                     document.body.appendChild(link);
                     link.click();
