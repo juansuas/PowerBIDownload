@@ -5,7 +5,7 @@ En DAX hay que hacer una combinación de TOCSV() con SUBSTITUTE() para lograr un
 Este es el caso para CSV:
 
 DescargaCSV = 
-// Capturamos el nombre para el archivo y sustituimos los espacios. Puede ser ese caractér u otro.
+// Capturamos el nombre para el archivo y sustituimos los espacios. Puede ser ese caractér u otro. Nota: si hay caracteres especiales como % o & o ".", reemplazarlos.
 VAR _FILENAME = "&filename=" &SUBSTITUTE(SELECTEDVALUE('Tabla'[columna]), " ", "_")
 
 // Usamos TOCSV() combinado con SELECTEDCOLUMNS() para generar la tabla en formato CSV con encabezados personalizados. 
