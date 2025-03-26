@@ -9,23 +9,28 @@
       body {
         font-family: "Segoe UI", Roboto, sans-serif;
         background-color: #f4f6f8;
+        margin: 0;
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100vh;
         color: #333;
-        margin: 0;
       }
       .container {
         text-align: center;
-        max-width: 500px;
+        max-width: 600px;
         background: white;
-        padding: 40px;
+        padding: 40px 30px;
         border-radius: 12px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       }
+      img.logo {
+        max-width: 320px;
+        margin-bottom: 20px;
+      }
       h1 {
         font-size: 1.5rem;
+        color: #0088bb;
         margin-bottom: 10px;
       }
       p {
@@ -33,23 +38,32 @@
         margin-bottom: 20px;
       }
       .btn {
-        background-color: #005fa8;
+        background-color: #0088bb;
         color: white;
         padding: 10px 20px;
         text-decoration: none;
         border-radius: 6px;
-        display: inline-block;
+        font-weight: bold;
       }
       .btn:hover {
-        background-color: #004c86;
+        background-color: #006f9c;
       }
     </style>
   </head>
   <body>
     <div class="container">
+      <img
+        class="logo"
+        src="https://abc.gob.ar/sites/default/files/2021-03/logo-pba-mobile.png"
+        alt="Gobierno de la Provincia de Buenos Aires"
+      />
       <h1>Redireccionando a la Plataforma de Datos</h1>
       <p>Serás dirigido automáticamente en unos segundos.</p>
-      <a class="btn" href="https://app.powerbi.com/view?r=eyJrIjoiN2Y4N2YzNDktYTVkZS00OGFmLWJkNTQtYWU3ODY1NmI4ZWZhIiwidCI6ImE1YmEzMDQ2LTNmMzQtNDI0Mi1iZjc4LTk5NDY1ODk2MGI4MCJ9&pageName=9fba775ce961eff8a47b">Ir ahora</a>
+      <a
+        class="btn"
+        href="https://app.powerbi.com/view?r=eyJrIjoiN2Y4N2YzNDktYTVkZS00OGFmLWJkNTQtYWU3ODY1NmI4ZWZhIiwidCI6ImE1YmEzMDQ2LTNmMzQtNDI0Mi1iZjc4LTk5NDY1ODk2MGI4MCJ9&pageName=9fba775ce961eff8a47b"
+        >Ir ahora</a
+      >
     </div>
   </body>
 </html>
