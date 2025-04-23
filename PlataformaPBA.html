@@ -2,7 +2,6 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="2; url=https://app.powerbi.com/view?r=eyJrIjoiN2Y4N2YzNDktYTVkZS00OGFmLWJkNTQtYWU3ODY1NmI4ZWZhIiwidCI6ImE1YmEzMDQ2LTNmMzQtNDI0Mi1iZjc4LTk5NDY1ODk2MGI4MCJ9&pageName=9fba775ce961eff8a47b" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Plataforma de Datos para la Gestión Educativa</title>
     <style>
@@ -38,6 +37,11 @@
         margin-bottom: 20px;
         color: #555;
       }
+      .btn-group {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+      }
       .btn {
         background-color: #04ADC2;
         color: white;
@@ -59,13 +63,24 @@
         src="https://abc.gob.ar/sites/default/files/2021-03/logo-pba-mobile.png"
         alt="Gobierno de la Provincia de Buenos Aires"
       />
-      <h1>Redireccionando a la Plataforma de Datos para la Gestión Educativa</h1>
-      <p>Serás dirigido automáticamente en unos segundos.</p>
-      <a
-        class="btn"
-        href="https://app.powerbi.com/view?r=eyJrIjoiN2Y4N2YzNDktYTVkZS00OGFmLWJkNTQtYWU3ODY1NmI4ZWZhIiwidCI6ImE1YmEzMDQ2LTNmMzQtNDI0Mi1iZjc4LTk5NDY1ODk2MGI4MCJ9&pageName=9fba775ce961eff8a47b"
-        >Ir ahora</a
-      >
+      <h1>Seleccione el nivel</h1>
+      <p>Haga clic en una de las siguientes opciones para ir al tablero deseado:</p>
+      <div class="btn-group">
+        <!-- Nivel Regional (actual link) -->
+        <a
+          class="btn"
+          href="https://app.powerbi.com/view?r=eyJrIjoiN2Y4N2YzNDktYTVkZS00OGFmLWJkNTQtYWU3ODY1NmI4ZWZhIiwidCI6ImE1YmEzMDQ2LTNmMzQtNDI0Mi1iZjc4LTk5NDY1ODk2MGI4MCJ9&pageName=9fba775ce961eff8a47b"
+        >
+          Nivel Regional
+        </a>
+        <!-- Nivel Central -->
+        <a
+          class="btn"
+          href="https://app.powerbi.com/view?r=eyJrIjoiODZjNmE0N2MtNTRmYS00MWY5LWFjYTItYTRjZmVhZDM4OGJkIiwidCI6ImE1YmEzMDQ2LTNmMzQtNDI0Mi1iZjc4LTk5NDY1ODk2MGI4MCJ9"
+        >
+          Nivel Central
+        </a>
+      </div>
     </div>
   </body>
 </html>
