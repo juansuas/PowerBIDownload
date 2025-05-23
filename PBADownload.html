@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descarga en Proceso</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Roboto, sans-serif;
+        background-color: #f4f6f8;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: #333;
+      }
+      .container {
+        text-align: center;
+        max-width: 600px;
+        background: white;
+        padding: 40px 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+      img.logo {
+        max-width: 320px;
+        margin-bottom: 20px;
+      }
+      h1 {
+        font-size: 1.5rem;
+        color: #04ADC2;
+        margin-bottom: 10px;
+      }
+      p {
+        font-size: 1rem;
+        margin-bottom: 20px;
+        color: #555;
+      }
+      .progress-container {
+        width: 100%;
+        background: #e0e0e0;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+      .progress-bar {
+        width: 0;
+        height: 16px;
+        background-color: #04ADC2;
+        transition: width 0.2s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img class="logo" src="https://abc.gob.ar/sites/default/files/2021-03/logo-pba-mobile.png" alt="Gobierno de la Provincia de Buenos Aires">
+      <h1>Descarga en proceso</h1>
+      <p>Por favor, espere mientras comenzamos la descarga.</p>
+      <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+    </div>
+    <script>
+      (function() {
+        // Obtener parámetro 'url' de la query string
+        const params = new URLSearchParams(window.location.search);
+        const downloadUrl = params.get('url');
+        if (!downloadUrl) {
+          document.querySelector('p').textContent = 'URL de descarga no proporcionada.';
+          return;
+        }
+
+        // Función para actualizar la barra de progreso
+        function updateProgress(percent) {
+          const bar = document.getElementById('progress-bar');
+          bar.style.width = percent + '%';
+        }
+
+        // Iniciar la descarga con XHR para monitorear progreso
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', downloadUrl);
+        xhr.responseType = 'blob';
+
+        xhr.onprogress = function(event) {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            updateProgress(percentComplete);
+          }
+        };
+
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            // Crear blob y forzar descarga
+            const blob = xhr.response;
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            // Intentar obtener nombre de archivo de headers
+            const disposition = xhr.getResponseHeader('Content-Disposition');
+            let fileName = '';
+            if (disposition && disposition.indexOf('filename=') !== -1) {
+              fileName = disposition.split('filename=')[1].replace(/['"]/g, '');
+            }
+            link.download = fileName || 'download';
+            document.body.appendChild(link);
+            link.click();
+            // Revocar URL y cerrar ventana tras un breve retraso
+            window.URL.revokeObjectURL(link.href);
+            setTimeout(() => window.close(), 1000);
+          } else {
+            document.querySelector('p').textContent = 'Error en la descarga. Código: ' + xhr.status;
+          }
+        };
+
+        xhr.onerror = function() {
+          document.querySelector('p').textContent = 'Error de red durante la descarga.';
+        };
+
+        // Enviar solicitud
+        xhr.send();
+      })();
+    </script>
+  </body>
+</html>
